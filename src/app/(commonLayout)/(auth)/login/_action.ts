@@ -1,7 +1,6 @@
 "use server";
 
 import { httpClient } from "@/lib/axios/httpClient";
-import CookieUtils from "@/lib/cookieUtils";
 import { setTokenInCookie } from "@/lib/tokenUtils";
 import { ApiErrorResponse } from "@/types/api.types";
 import { ILoginResponse } from "@/types/auth.types";
