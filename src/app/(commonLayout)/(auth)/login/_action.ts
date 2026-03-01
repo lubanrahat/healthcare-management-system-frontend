@@ -1,9 +1,12 @@
 "use server";
 
 import { httpClient } from "@/lib/axios/httpClient";
+import CookieUtils from "@/lib/cookieUtils";
+import { setTokenInCookie } from "@/lib/tokenUtils";
 import { ApiErrorResponse } from "@/types/api.types";
 import { ILoginResponse } from "@/types/auth.types";
 import { ILoginPayload, loginSchema } from "@/zod/auth.validation";
+import { redirect } from "next/navigation";
 
 export const loginAction = async (
   payload: ILoginPayload,
@@ -20,16 +23,18 @@ export const loginAction = async (
     const response = await httpClient.post<ILoginResponse>(
       "/auth/login",
       parsedPayload.data,
-    )
+    );
     if (!response.data) {
       throw new Error("Login failed: No data received from server");
     }
 
-    const {accessToken, refreshToken, user} = response.data;
+    const { token, accessToken, refreshToken } = response.data;
 
+    await setTokenInCookie("better-auth.session_token", token);
+    await setTokenInCookie("accessToken", accessToken);
+    await setTokenInCookie("refreshToken", refreshToken);
 
-
-    return response.data;
+    redirect("/dashboard");
   } catch (error) {
     return {
       success: false,
