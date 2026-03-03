@@ -1,50 +1,101 @@
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import type { AnyFieldApi } from "@tanstack/react-form"
-import { Label } from "../../ui/label";
-import { Input } from "../../ui/input";
+import type { AnyFieldApi } from "@tanstack/react-form";
+import React from "react";
 
-type AppFielsProps = {
-    field: AnyFieldApi;
-    label: string;
-    placeholder?: string;
-    type?: string;
-    append?: React.ReactNode;
-    prepend?: React.ReactNode;
-    disabled?: boolean;
-    className?: string;
+const getErrorMessage = (error: unknown): string => {
+    if (typeof error === "string") return error;
 
+    if (error && typeof error === "object") {
+        if ("message" in error && typeof error.message === "string") {
+            return error.message;
+        }
+    }
+
+    return String(error);
 }
 
-export default function AppFiels({ field, label, placeholder, type = "text", append, prepend, disabled, className }: AppFielsProps) {
+type AppFieldProps = {
+    field: AnyFieldApi;
+    label: string;
+    type?: "text" | "email" | "password" | "number";
+    placeholder?: string;
+    append?: React.ReactNode;
+    prepend?: React.ReactNode;
+    className?: string;
+    disabled?: boolean;
+}
+
+const AppField = ({
+    field,
+    label,
+    type = "text",
+    placeholder,
+    append,
+    prepend,
+    className,
+    disabled = false,
+}: AppFieldProps) => {
+
+    const firstError = field.state.meta.isTouched && field.state.meta.errors.length > 0 ? getErrorMessage(field.state.meta.errors[0]) : null;
+
+    const hasError = firstError !== null;
+
     return (
         <div className={cn("space-y-1.5", className)}>
-            <Label htmlFor={field.name} className={cn("font-medium", disabled && "cursor-not-allowed opacity-50")}>{label}</Label>
+            <Label
+                htmlFor={field.name}
+                className={cn(hasError && "text-destructive")}
+            >
+                {label}
+            </Label>
+
             <div className="relative">
-                {prepend && <div className="absolute left-2 top-1/2 -translate-y-1/2">{prepend}</div>}
+                {
+                    prepend && (<div className="absolute inset-y-0 left-0 items-center pl-3 pointer-events-none z-10">
+                        {prepend}
+                    </div>)
+                }
+
                 <Input
-                    type={type}
                     id={field.name}
                     name={field.name}
+                    type={type}
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={() => field.handleBlur()}
                     placeholder={placeholder}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.value)}
                     disabled={disabled}
-                    className={cn("flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                    aria-invalid={hasError}
+                    aria-describedby={hasError ? `${field.name}-error` : undefined}
+                    className={cn(
                         prepend && "pl-10",
                         append && "pr-10",
-                        field.state.meta.errors.length > 0 && "border-red-500 focus-visible:ring-red-500"
+                        hasError && "border-destructive focus-visible:ring-destructive/20",
                     )}
                 />
-                {append && <div className="absolute right-2 top-1/2 -translate-y-1/2">{append}</div>}
+
+                {
+                    append && (<div className="absolute inset-y-0 right-0 items-center pr-3 pointer-events-none z-10">
+                        {append}
+                    </div>)
+                }
+
+                {
+                    hasError && (
+                        <p
+                            id={`${field.name}-error`}
+                            role="alert"
+                            className="text-sm text-destructive"
+                        >
+                            {firstError}
+                        </p>
+                    )
+                }
             </div>
-            {field.state.meta.errors.length > 0 && (
-                <p className="text-sm text-red-500">
-                    {typeof field.state.meta.errors[0] === 'object' && field.state.meta.errors[0] !== null
-                        ? (field.state.meta.errors[0] as { message?: string }).message
-                        : String(field.state.meta.errors[0])}
-                </p>
-            )}
         </div>
     )
 }
+
+export default AppField

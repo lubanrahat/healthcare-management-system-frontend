@@ -1,17 +1,12 @@
 "use server";
 
 import jwt, { JwtPayload } from "jsonwebtoken";
-import CookieUtils from "./cookieUtils";
+import { setCookie } from "./cookieUtils";
 
-const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_TOKEN_KEY;
-
-export const getTokenSecondsRemaining = async (token: string) => {
+const getTokenSecondsRemaining = (token: string): number => {
+  if (!token) return 0;
   try {
-    if (!JWT_ACCESS_SECRET) return 0;
-
-    const tokenPayload = JWT_ACCESS_SECRET
-      ? (jwt.verify(token, JWT_ACCESS_SECRET) as JwtPayload)
-      : (jwt.decode(token) as JwtPayload);
+    const tokenPayload = jwt.decode(token) as JwtPayload;
 
     if (tokenPayload && !tokenPayload.exp) {
       return 0;
@@ -22,15 +17,34 @@ export const getTokenSecondsRemaining = async (token: string) => {
 
     return remainingSeconds > 0 ? remainingSeconds : 0;
   } catch (error) {
-    console.error(
-      "Error decoding token:",
-      error instanceof Error ? error.message : "Unknown error",
-    );
+    console.error("Error decoding token:", error);
     return 0;
   }
 };
 
-export const setTokenInCookie = async (name: string, token: string) => {
-  const maxAgeInSeconds = await getTokenSecondsRemaining(token);
-  await CookieUtils.set(name, token, maxAgeInSeconds);
+export const setTokenInCookies = async (
+  name: string,
+  token: string,
+  fallbackMaxAgeInSeconds = 60 * 60 * 24, // 1 days
+) => {
+  let maxAgeInSeconds;
+
+  if (name !== "better-auth.session_token") {
+    maxAgeInSeconds = getTokenSecondsRemaining(token);
+  }
+
+  await setCookie(name, token, maxAgeInSeconds || fallbackMaxAgeInSeconds);
 };
+
+export async function isTokenExpiringSoon(
+  token: string,
+  thresholdInSeconds = 300,
+): Promise<boolean> {
+  const remainingSeconds = getTokenSecondsRemaining(token);
+  return remainingSeconds > 0 && remainingSeconds <= thresholdInSeconds;
+}
+
+export async function isTokenExpired(token: string): Promise<boolean> {
+  const remainingSeconds = getTokenSecondsRemaining(token);
+  return remainingSeconds === 0;
+}

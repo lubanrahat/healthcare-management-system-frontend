@@ -1,26 +1,43 @@
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
+import React from 'react';
 
 type AppSubmitButtonProps = {
+    isPending: boolean;
     children: React.ReactNode;
+    pendingLabel?: string;
     className?: string;
     disabled?: boolean;
-    loading?: boolean;
-    variant?: "default" | "outline" | "ghost" | "link";
-    size?: "default" | "sm" | "lg" | "icon";
 }
 
-export default function AppSubmitButton({ children, className, disabled, loading, variant, size }: AppSubmitButtonProps) {
+
+const AppSubmitButton = ({
+    isPending,
+    children,
+    pendingLabel = "Submitting...",
+    className,
+    disabled = false,
+}: AppSubmitButtonProps
+) => {
+
+    const isDisabled = disabled || isPending;
+
     return (
         <Button
-            type="submit"
-            className={cn(className)}
-            disabled={disabled || loading}
-            variant={variant}
-            size={size}
+            type='submit'
+            disabled={isDisabled}
+            className={cn("w-full", className)}
         >
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : children}
+            {isPending ? (
+                <>
+                    <Loader2 className="animate-spin" aria-hidden="true" />
+                    {pendingLabel ? pendingLabel : children}
+                </>
+            ) : children
+            }
         </Button>
     )
 }
+
+export default AppSubmitButton

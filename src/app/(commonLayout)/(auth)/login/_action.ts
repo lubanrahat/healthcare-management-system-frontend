@@ -1,18 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import { httpClient } from "@/lib/axios/httpClient";
-import { setTokenInCookie } from "@/lib/tokenUtils";
+import { setTokenInCookies } from "@/lib/tokenUtils";
 import { ApiErrorResponse } from "@/types/api.types";
 import { ILoginResponse } from "@/types/auth.types";
-import { ILoginPayload, loginSchema } from "@/zod/auth.validation";
+import { ILoginPayload, loginZodSchema } from "@/zod/auth.validation";
 import { redirect } from "next/navigation";
 
 export const loginAction = async (
   payload: ILoginPayload,
 ): Promise<ILoginResponse | ApiErrorResponse> => {
-  const parsedPayload = loginSchema.safeParse(payload);
+  const parsedPayload = loginZodSchema.safeParse(payload);
+
   if (!parsedPayload.success) {
-    const firstError = parsedPayload.error.issues[0].message;
+    const firstError = parsedPayload.error.issues[0].message || "Invalid input";
     return {
       success: false,
       message: firstError,
@@ -23,21 +25,27 @@ export const loginAction = async (
       "/auth/login",
       parsedPayload.data,
     );
-    if (!response.data) {
-      throw new Error("Login failed: No data received from server");
-    }
+    console.log(response.data);
 
-    const { token, accessToken, refreshToken } = response.data;
-
-    await setTokenInCookie("better-auth.session_token", token);
-    await setTokenInCookie("accessToken", accessToken);
-    await setTokenInCookie("refreshToken", refreshToken);
+    const { accessToken, refreshToken, token } = response.data;
+    await setTokenInCookies("accessToken", accessToken);
+    await setTokenInCookies("refreshToken", refreshToken);
+    await setTokenInCookies("better-auth.session_token", token, 24 * 60 * 60); // 1 day in seconds
 
     redirect("/dashboard");
-  } catch (error) {
+  } catch (error: any) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      typeof error.digest === "string" &&
+      error.digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw error;
+    }
     return {
       success: false,
-      message: error instanceof Error ? error.message : "Something went wrong",
+      message: `Login failed: ${error.message}`,
     };
   }
 };
