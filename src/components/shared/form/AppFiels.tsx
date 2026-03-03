@@ -39,7 +39,11 @@ export default function AppFiels({ field, label, placeholder, type = "text", app
                 {append && <div className="absolute right-2 top-1/2 -translate-y-1/2">{append}</div>}
             </div>
             {field.state.meta.errors.length > 0 && (
-                <p className="text-sm text-red-500">{field.state.meta.errors[0]}</p>
+                <p className="text-sm text-red-500">
+                    {typeof field.state.meta.errors[0] === 'object' && field.state.meta.errors[0] !== null
+                        ? (field.state.meta.errors[0] as { message?: string }).message
+                        : String(field.state.meta.errors[0])}
+                </p>
             )}
         </div>
     )

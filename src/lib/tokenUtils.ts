@@ -5,7 +5,7 @@ import CookieUtils from "./cookieUtils";
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_TOKEN_KEY;
 
-export const getTokenSecondsRemaining = (token: string) => {
+export const getTokenSecondsRemaining = async (token: string) => {
   try {
     if (!JWT_ACCESS_SECRET) return 0;
 
@@ -31,6 +31,6 @@ export const getTokenSecondsRemaining = (token: string) => {
 };
 
 export const setTokenInCookie = async (name: string, token: string) => {
-  const maxAgeInSeconds = getTokenSecondsRemaining(token);
+  const maxAgeInSeconds = await getTokenSecondsRemaining(token);
   await CookieUtils.set(name, token, maxAgeInSeconds);
 };
