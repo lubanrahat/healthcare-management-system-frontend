@@ -24,7 +24,10 @@ export interface ApiRequestOptions {
   headers?: Record<string, string>;
 }
 
-const httpGet = async <TData>(endpoint: string, options?: ApiRequestOptions): Promise<ApiResponse<TData>> => {
+const httpGet = async <TData>(
+  endpoint: string,
+  options?: ApiRequestOptions,
+): Promise<ApiResponse<TData>> => {
   try {
     const instance = axiosInstance();
     const response = await instance.get<ApiResponse<TData>>(endpoint, {
@@ -72,7 +75,10 @@ const httpPut = async <TData>(
   }
 };
 
-const httpDelete = async <TData>(endpoint: string, options?: ApiRequestOptions): Promise<ApiResponse<TData>> => {
+const httpDelete = async <TData>(
+  endpoint: string,
+  options?: ApiRequestOptions,
+): Promise<ApiResponse<TData>> => {
   try {
     const response = await axiosInstance().delete(endpoint, {
       params: options?.params,

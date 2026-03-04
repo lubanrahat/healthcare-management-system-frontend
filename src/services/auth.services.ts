@@ -15,6 +15,3 @@ export const getDoctor = async () => {
   const doctors = await httpClient.get<IDoctor[]>("/doctors");
   return doctors.data;
 };
-
-
-
