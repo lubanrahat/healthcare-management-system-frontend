@@ -1,8 +1,7 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { loginAction } from "@/app/(commonLayout)/(auth)/login/_action";
 import AppField from "@/components/shared/form/AppFiels";
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import AppSubmitButton from "@/components/shared/form/AppSubmitButton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,14 +20,18 @@ import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-const LoginForm = () => {
+interface LoginFormProps {
+  redirectPath?: string;
+}
+
+const LoginForm = ({ redirectPath }: LoginFormProps) => {
   // const queryClient = useQueryClient();
 
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const { mutateAsync, isPending } = useMutation({
-    mutationFn: (payload: ILoginPayload) => loginAction(payload),
+    mutationFn: (payload: ILoginPayload) => loginAction(payload, redirectPath),
   });
 
   const form = useForm({
