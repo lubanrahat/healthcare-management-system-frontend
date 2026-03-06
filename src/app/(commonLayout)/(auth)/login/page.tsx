@@ -7,9 +7,7 @@ interface LoginParams {
 const LoginPage = async ({ searchParams }: LoginParams) => {
   const params = await searchParams;
   const redirectPath = params.redirect;
-  return (
-    <LoginForm redirectPath={redirectPath}/>
-  )
-}
+  return <LoginForm redirectPath={redirectPath} />;
+};
 
-export default LoginPage
+export default LoginPage;
